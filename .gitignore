@@ -1,0 +1,38 @@
+# Ignore virtual environments
+venv/
+env/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Streamlit cache and logs
+.streamlit/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Environment variables and secrets
+.env
+*.env
+
+# Ignore requirements lock files (optional)
+pipfile.lock
+poetry.lock
+
+# Ignore deployment artifacts (if applicable)
+*.tar.gz
+*.zip
+
