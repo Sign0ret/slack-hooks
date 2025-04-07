@@ -3,3 +3,4 @@ uvicorn
 streamlit
 slack-sdk 
 requests
+slack-sdk

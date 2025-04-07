@@ -1,9 +1,16 @@
 from fastapi import FastAPI, Request
 import requests
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 app = FastAPI()
 
-SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"
+SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
+
+if not SLACK_WEBHOOK_URL:
+    raise ValueError("❌ Slack webhook URL missing! Check your .env file")
 
 @app.post("/slack-webhook")
 async def slack_webhook(request: Request):
