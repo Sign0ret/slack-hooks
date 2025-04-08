@@ -4,3 +4,4 @@ streamlit
 slack-sdk 
 requests
 slack-sdk
+python-multipart
