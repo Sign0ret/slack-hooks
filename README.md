@@ -10,17 +10,27 @@ cd slack-hooks
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+
 ```
-### Development execution command.
+finally add the .env file following the .env.example
+### Executing using single script.
 ```
 python run.py --dev
 ```
-
-### Production execution command.
 ```
 python run.py
 ```
 
+###  Executing using separated commands.
+To run Backend.
+```
+uvicorn app:app --host 127.0.0.1 --port 8000
+```
+To run Frontend.
+```
+streamlit run dashboard.py
+```
+watch the dashboard at http://localhost:8501
 ## TEAM Contributors.
 - Carlos Iván Armenta Naranjo - A01643070
 - Jorge Javier Blásquez Gonzalez - A01637706 
