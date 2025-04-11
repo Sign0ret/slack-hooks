@@ -95,8 +95,9 @@ with st.expander("🌐 Upload from URL", expanded=True):
                 )
                 
                 if response.json().get("status") == "success":
-                    st.success("File successfully uploaded from URL!")
-                    st.json(response.json().get("response", {}))
+                    st.success("✅ File successfully uploaded from URL!")
+                    st.balloons()
+                    #st.json(response.json().get("response", {}))
                 else:
                     st.error(f"URL upload failed: {response.json().get('details', 'Unknown error')}")
             else:

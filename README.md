@@ -31,6 +31,13 @@ To run Frontend.
 streamlit run dashboard.py
 ```
 watch the dashboard at http://localhost:8501
+
+### Upload from URL examples: 
+- https://drive.google.com/uc?export=download&id=1Sq-pRzH_mr_bSEYmDWdL7u3KWVePY12u
+
+- https://arxiv.org/pdf/2504.07933.pdf
+
+- https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf
 ## TEAM Contributors.
 - Carlos Iván Armenta Naranjo - A01643070
 - Jorge Javier Blásquez Gonzalez - A01637706 

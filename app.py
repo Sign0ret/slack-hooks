@@ -1,10 +1,12 @@
-from fastapi import FastAPI, Request, UploadFile, File
+from fastapi import FastAPI, Request, UploadFile, File, Body
 import requests
 from dotenv import load_dotenv
 import os
 import uvicorn
 import json
 from typing import Dict
+from urllib.request import urlopen
+from io import BytesIO
 
 load_dotenv()
 
@@ -47,93 +49,6 @@ async def send_message(request: Request):
         if response.status_code == 200 and response.json().get("ok"):
             return {"status": "success", "response": response.json()}
         return {"status": "error", "details": response.text}
-
-    except Exception as e:
-        return {"status": "error", "details": str(e)}
-
-
-@app.post("/upload-from-url")
-async def upload_from_url(request: Request):
-    """Endpoint to upload a file from a URL to Slack channel"""
-    try:
-        data = await request.json()
-        file_url = data.get("url")
-
-        if not file_url:
-            return {"status": "error", "details": "No URL provided"}
-
-        # 1. Download file from URL
-        file_response = requests.get(file_url)
-        if file_response.status_code != 200:
-            return {"status": "error", "details": "Failed to fetch file from URL"}
-
-        file_content = file_response.content
-        file_length = len(file_content)
-        filename = file_url.split("/")[-1].split("?")[0] or "file_from_url.txt"
-
-        # Debugging: Print out the filename and length
-        print(f"Filename: {filename}")
-        print(f"Length: {file_length}")
-        print(f"Payload: {json.dumps({'filename': filename, 'length': file_length})}")
-
-        # 2. Request an upload URL from Slack using files.getUploadURLExternal
-        headers = {
-            "Authorization": f"Bearer {SLACK_TOKEN}",
-            "Content-Type": "application/json; charset=utf-8"
-        }
-
-        payload = {
-            "filename": filename,
-            "length": str(file_length)  # Ensure length is passed as string
-        }
-
-        # Debugging: Check if the payload is correctly serialized
-        print(f"Headers: {headers}")
-        print(f"Payload: {json.dumps(payload)}")
-
-        upload_url_res = requests.post(
-            SLACK_GET_UPLOAD_URL_API,
-            headers=headers,
-            json=payload  # Ensure we're passing the payload as a JSON object
-        )
-
-        # Debugging: Print the upload URL response
-        print(f"Upload URL Response: {upload_url_res.text}")
-
-        if not upload_url_res.ok:
-            return {"status": "error", "details": upload_url_res.text}
-
-        upload_url_data = upload_url_res.json()
-        if not upload_url_data.get("ok"):
-            return {"status": "error", "details": upload_url_data}
-
-        upload_url = upload_url_data["upload_url"]
-        file_id = upload_url_data["file_id"]
-
-        # 3. Upload the actual file to the upload URL
-        upload_response = requests.put(
-            upload_url,
-            data=file_content,
-            headers={"Content-Type": "application/octet-stream"}
-        )
-
-        if upload_response.status_code != 200:
-            return {"status": "error", "details": "Failed to PUT upload"}
-
-        # 4. Complete the upload process
-        complete_res = requests.post(
-            SLACK_COMPLETE_UPLOAD_API,
-            headers=headers,
-            json={
-                "files": [{"id": file_id, "title": filename}],
-                "channel_id": SLACK_CHANNEL_ID
-            }
-        )
-
-        if not complete_res.ok or not complete_res.json().get("ok"):
-            return {"status": "error", "details": complete_res.text}
-
-        return {"status": "success", "response": complete_res.json()}
 
     except Exception as e:
         return {"status": "error", "details": str(e)}
@@ -185,6 +100,31 @@ async def upload_file(file: UploadFile = File(...)):
     except Exception as e:
         return {"status": "error", "details": str(e)}
 
+@app.post("/upload-from-url")
+async def upload_from_url(payload: Dict = Body(...)):
+    """Endpoint to upload a file from URL to Slack"""
+    try:
+        url = payload.get("url")
+        if not url:
+            return {"status": "error", "details": "URL is required"}
+        
+        # Step 1: Download the file
+        with urlopen(url) as response:
+            file_bytes = response.read()
+            filename = url.split('/')[-1] or "downloaded_file"
+            
+            file = UploadFile(
+                filename=filename,
+                file=BytesIO(file_bytes),
+                size=len(file_bytes)
+            )
+            
+            # Step 2: Reuse the existing upload endpoint
+            return await upload_file(file)
+            
+    except Exception as e:
+        return {"status": "error", "details": str(e)}
+
 def handle_slack_response(response: requests.Response) -> Dict:
     """Standardize Slack API responses"""
     if response.status_code == 200 and response.json().get("ok"):
@@ -197,6 +137,7 @@ def handle_slack_response(response: requests.Response) -> Dict:
         "details": response.text,
         "slack_error": response.json().get("error", "")
     }
+
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
