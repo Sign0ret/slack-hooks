@@ -43,7 +43,43 @@ with st.expander("💬 Send Text Message", expanded=True):
             else:
                 st.warning("Please enter a message before sending!")
 
-# Section 3: Upload from URL
+# Section 2: File Upload
+with st.expander("📁 Upload File", expanded=True):
+    with st.form("upload_form"):
+        uploaded_file = st.file_uploader(
+            "Choose a file to upload to Slack:",
+            type=['png', 'jpg', 'pdf'],
+            accept_multiple_files=False
+        )
+        
+        if st.form_submit_button("⬆️ Upload File"):
+            if uploaded_file is not None:
+                # Prepare the file for upload
+                file_bytes = uploaded_file.getvalue()
+                
+                # Prepare the request data
+                files = {"file": (uploaded_file.name, file_bytes)}
+                
+                # Show upload progress
+                with st.spinner(f"Uploading {uploaded_file.name}..."):
+                    try:
+                        response = requests.post(
+                            f"{API_BASE}/upload-file",
+                            files=files
+                        )
+                        
+                        if response.json().get("status") == "success":
+                            st.success("✅ File uploaded successfully!")
+                            st.balloons()
+                            
+                        else:
+                            st.error(f"❌ Upload failed: {response.json().get('details', 'Unknown error')}")
+                    except Exception as e:
+                        st.error(f"🚨 An error occurred: {str(e)}")
+            else:
+                st.warning("⚠️ Please select a file to upload!")
+
+# Section 3: Upload file via URL 
 with st.expander("🌐 Upload from URL", expanded=True):
     with st.form("url_form"):
         file_url = st.text_input(
